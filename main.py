@@ -108,6 +108,7 @@ def main():
 
         for region in regions:
             for search_for_index, search_for in enumerate(search_list):
+                search_for_index = search_for_index +1
                 search_term = f"{search_for} {region}"
                 print(f"-----\n{search_for_index} - {search_term}".strip())
 
