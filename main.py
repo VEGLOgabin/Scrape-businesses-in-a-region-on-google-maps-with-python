@@ -1,37 +1,48 @@
 from playwright.sync_api import sync_playwright
-from dataclasses import dataclass, asdict, field
 import pandas as pd
 import argparse
 import os
 import sys
 import re
 
-@dataclass
 class Business:
-    """holds business data"""
+    """Holds business data"""
+    
+    def __init__(self):
+        self.name = None
+        self.address = None
+        self.website = None
+        self.phone_number = None
+        self.reviews_count = None
+        self.reviews_average = None
+        self.latitude = None
+        self.longitude = None
+        self.one_star_reviews = None
 
-    name: str = None
-    address: str = None
-    website: str = None
-    phone_number: str = None
-    reviews_count: int = None
-    reviews_average: float = None
-    latitude: float = None
-    longitude: float = None
-    one_star_reviews: int = None
+    def to_dict(self):
+        """Convert the Business instance to a dictionary"""
+        return {
+            'name': self.name,
+            'address': self.address,
+            'website': self.website,
+            'phone_number': self.phone_number,
+            'reviews_count': self.reviews_count,
+            'reviews_average': self.reviews_average,
+            'latitude': self.latitude,
+            'longitude': self.longitude,
+            'one_star_reviews': self.one_star_reviews
+        }
 
-@dataclass
 class BusinessList:
-    """holds list of Business objects, and saves to both Excel and CSV"""
-
-    business_list: list[Business] = field(default_factory=list)
-    save_at = 'output'
+    """Holds a list of Business objects and saves to both Excel and CSV"""
+    
+    def __init__(self):
+        self.business_list = []
+        self.save_at = 'output'
 
     def dataframe(self):
         """Transform business_list to pandas dataframe"""
-        return pd.json_normalize(
-            (asdict(business) for business in self.business_list), sep="_"
-        )
+        return pd.DataFrame([business.to_dict() for business in self.business_list])
 
     def save_to_excel(self, filename):
         """Save pandas dataframe to Excel (xlsx) file"""
@@ -45,19 +56,20 @@ class BusinessList:
             os.makedirs(self.save_at)
         self.dataframe().to_csv(f"{self.save_at}/{filename}.csv", index=False)
 
-def extract_coordinates_from_url(url: str) -> tuple[float, float]:
+def extract_coordinates_from_url(url):
     """Helper function to extract coordinates from URL"""
     coordinates = url.split('/@')[-1].split('/')[0]
-    return float(coordinates.split(',')[0]), float(coordinates.split(',')[1])
+    lat, lon = coordinates.split(',')
+    return float(lat), float(lon)
 
-def parse_review_text(review_text: str) -> int:
+def parse_review_text(review_text):
     """Extract the number of 1-star reviews from review text"""
     match = re.search(r'(\d+)\s*1-star', review_text, re.IGNORECASE)
     return int(match.group(1)) if match else 0
 
 def main():
     ########
-    # input 
+    # Input 
     ########
     
     # Read search terms from arguments or file
@@ -75,21 +87,14 @@ def main():
         input_file_path = os.path.join(os.getcwd(), input_file_name)
         if os.path.exists(input_file_path):
             with open(input_file_path, 'r') as file:
-                search_list = file.readlines()
+                search_list = file.read().splitlines()
 
     if not search_list:
         print('Error: You must either pass the -s search argument or add searches to input.txt')
         sys.exit()
 
-    if args.total:
-        total = args.total
-    else:
-        total = 1_000
-
-    if args.regions:
-        regions = args.regions
-    else:
-        regions = ['USA', 'Australia', 'UK', 'New Zealand']
+    total = args.total if args.total else 1_000
+    regions = args.regions if args.regions else ['USA', 'Australia', 'UK', 'New Zealand']
 
     ###########
     # Scraping
@@ -140,7 +145,7 @@ def main():
                         listing.click()
                         page.wait_for_timeout(5000)
 
-                        name_attibute = 'aria-label'
+                        name_attribute = 'aria-label'
                         address_xpath = '//button[@data-item-id="address"]//div[contains(@class, "fontBodyMedium")]'
                         website_xpath = '//a[@data-item-id="authority"]//div[contains(@class, "fontBodyMedium")]'
                         phone_number_xpath = '//button[contains(@data-item-id, "phone:tel:")]//div[contains(@class, "fontBodyMedium")]'
@@ -149,8 +154,8 @@ def main():
 
                         business = Business()
 
-                        if len(listing.get_attribute(name_attibute)) >= 1:
-                            business.name = listing.get_attribute(name_attibute)
+                        if len(listing.get_attribute(name_attribute)) >= 1:
+                            business.name = listing.get_attribute(name_attribute)
                         else:
                             business.name = ""
                         if page.locator(address_xpath).count() > 0:
@@ -174,7 +179,7 @@ def main():
                             business.one_star_reviews = 0
                             
                         if page.locator(reviews_average_xpath).count() > 0:
-                            business.reviews_average = float(page.locator(reviews_average_xpath).get_attribute(name_attibute).split()[0].replace(',', '.')) or 0.0
+                            business.reviews_average = float(page.locator(reviews_average_xpath).get_attribute(name_attribute).split()[0].replace(',', '.')) or 0.0
                         else:
                             business.reviews_average = 0.0
 
