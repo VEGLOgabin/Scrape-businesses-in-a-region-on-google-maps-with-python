@@ -1,0 +1,6 @@
+restaurants
+coffee shops
+gyms
+hotels
+lawyers
+plumbers
