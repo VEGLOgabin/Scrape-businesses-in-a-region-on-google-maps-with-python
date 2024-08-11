@@ -6,55 +6,73 @@
 
 
 
-Scrape businesses in a region on google maps with python
+# Business Data Scraper
 
-To run the provided script, follow these steps:
+## Overview
 
-1. Set Up Your Environment
-Ensure you have Python and the required libraries installed. You can use a virtual environment to manage dependencies.
+The `Business Data Scraper` is a Python script that utilizes Playwright and BeautifulSoup to scrape business data from Google Maps. This script searches for businesses based on provided search terms and regions, retrieves detailed business information including name, address, website, phone number, reviews count, and average reviews, and saves the data to both Excel and CSV files.
 
-Install Dependencies
-Create and activate a virtual environment (optional but recommended):
+## Features
 
+- **Search and Scrape**: Searches for businesses on Google Maps based on provided search terms and regions.
+- **Data Extraction**: Extracts key business information including:
+  - Name
+  - Address
+  - Website
+  - Phone Number
+  - Reviews Count
+  - Average Reviews
+  - Latitude and Longitude
+- **Output**: Saves the extracted data to Excel and CSV files for easy access and analysis.
 
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-Install the necessary packages:
+## Requirements
 
+- Python 3.7 or higher
+- Playwright
+- BeautifulSoup
+- pandas
 
-pip install playwright pandas
+You can install the required packages using `pip`:
+
+```bash
+pip install playwright beautifulsoup4 pandas
 playwright install
-This will install Playwright and its required browser binaries. If you encounter issues, you may need to follow Playwright's installation instructions for your specific environment.
 
-2. Prepare Your Script
-Save the Script:
-Copy the provided script into a file, e.g., scrape_google_maps.py.
+Usage
+To run the script, use the following command:
 
-Ensure Input File (if needed):
-If you are not using the -s argument to pass search terms directly, create an input.txt file in the same directory as your script with each search term on a new line.
+python script_name.py -s "search_term" -t total_results -r region1 region2 ...
 
-3. Run the Script
-Open a terminal or command prompt and navigate to the directory where your script is saved. Run the script with the desired arguments.
-
-Basic Usage
-For searching a term in default regions:
+Command Line Arguments
+-s, --search (required): The search term or keyword for the business you want to find.
+-t, --total (optional): The total number of business listings to scrape (default is 1,000).
+-r, --regions (optional): A list of regions to search in (default includes USA, Australia, UK, New Zealand).
 
 
-python scrape_google_maps.py -s "restaurant" -t 100
-Specify Regions
-To search in specific regions:
+Example:
+
+python script_name.py -s "restaurant" -t 500 -r "USA" "Canada"
+
+Alternatively, you can place search terms in a file named input.txt, with each term on a new line. Simply omit the -s argument when running the script.
 
 
-python scrape_google_maps.py -s "restaurant" -t 100 -r USA Australia UK New Zealand
-Run with Input File
-If you have multiple search terms in input.txt, simply run:
+How It Works
+Initialization: The script initializes Playwright and opens a new browser page.
+Search and Navigation: Performs searches on Google Maps based on the provided search terms and regions.
+Data Scraping: Clicks on each business listing to retrieve detailed information using BeautifulSoup for HTML parsing.
+Data Storage: Saves the scraped data to Excel and CSV files in the output directory.
+Benefits for Businesses
+Market Research: Quickly gather detailed information on competitors or potential partners within specific regions.
+Lead Generation: Identify and collect contact details of businesses for outreach and partnerships.
+Data Analysis: Analyze reviews and ratings to gain insights into market trends and customer preferences.
+Efficiency: Automate the data collection process, saving time and reducing manual effort.
+Notes
+Ensure you have the appropriate permissions and comply with Google Maps' terms of service when scraping data.
+The script may need adjustments if Google Maps updates its layout or if specific elements change.
 
+### **Contributors**
+- [Gabin H. VEGLO](https://github.com/VEGLOgabin)
 
-python scrape_google_maps.py -t 100
-4. Review Output
-The script will generate Excel and CSV files in the output directory with the data scraped. The filenames will be formatted as google_maps_data_<search_term>_<region>.xlsx and google_maps_data_<search_term>_<region>.csv.
+### **License**
+#**This project is licensed under the MIT License.**#
 
-Troubleshooting
-Error Handling: Ensure that Playwright is correctly installed and the browser binaries are available. If you encounter issues, refer to Playwright's documentation for troubleshooting.
-Network Issues: Check for network issues if the script is unable to access Google Maps or if there are issues with loading the page.
-Adjust Timeouts: If the page takes longer to load, you might need to adjust page.wait_for_timeout() values.
