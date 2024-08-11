@@ -4,6 +4,8 @@ import argparse
 import os
 import sys
 import re
+from bs4 import BeautifulSoup
+
 
 class Business:
     """Holds business data"""
@@ -58,9 +60,12 @@ class BusinessList:
 
 def extract_coordinates_from_url(url):
     """Helper function to extract coordinates from URL"""
+    # coordinates = url.split('/@')[-1].split('/')[0]
+    # print(coordinates)
+    # lat, lon, h = coordinates.split(',')
+    # return float(lat), float(lon)
     coordinates = url.split('/@')[-1].split('/')[0]
-    lat, lon = coordinates.split(',')
-    return float(lat), float(lon)
+    return float(coordinates.split(',')[0]), float(coordinates.split(',')[1])
 
 def parse_review_text(review_text):
     """Extract the number of 1-star reviews from review text"""
@@ -143,22 +148,27 @@ def main():
 
                 for listing in listings:
                     try:
+                        html_content = listing.inner_html()
+                        soup = BeautifulSoup(html_content, 'html.parser')
+                        
                         listing.click()
                         page.wait_for_timeout(5000)
 
                         name_attribute = 'aria-label'
+                        name = soup.select_one('[aria-label]')
                         address_xpath = '//button[@data-item-id="address"]//div[contains(@class, "fontBodyMedium")]'
                         website_xpath = '//a[@data-item-id="authority"]//div[contains(@class, "fontBodyMedium")]'
                         phone_number_xpath = '//button[contains(@data-item-id, "phone:tel:")]//div[contains(@class, "fontBodyMedium")]'
                         review_count_xpath = '//button[@jsaction="pane.reviewChart.moreReviews"]//span'
                         reviews_average_xpath = '//div[@jsaction="pane.reviewChart.moreReviews"]//div[@role="img"]'
-
+                        
                         business = Business()
 
-                        if len(listing.get_attribute(name_attribute)) >= 1:
-                            business.name = listing.get_attribute(name_attribute)
-                        else:
-                            business.name = ""
+                        # if listing.get_attribute(name_attribute):
+                        #     business.name = listing.get_attribute(name_attribute)
+                        # else:
+                        #     business.name = ""
+                        business.name = name.get('aria-label') if name else ""
                         if page.locator(address_xpath).count() > 0:
                             business.address = page.locator(address_xpath).all()[0].inner_text()
                         else:
@@ -183,8 +193,9 @@ def main():
                             business.reviews_average = float(page.locator(reviews_average_xpath).get_attribute(name_attribute).split()[0].replace(',', '.')) or 0.0
                         else:
                             business.reviews_average = 0.0
-
+                            
                         business.latitude, business.longitude = extract_coordinates_from_url(page.url)
+                        
 
                         business_list.business_list.append(business)
                     except Exception as e:
