@@ -19,7 +19,6 @@ class Business:
         self.reviews_average = None
         self.latitude = None
         self.longitude = None
-        self.one_star_reviews = None
 
     def to_dict(self):
         """Convert the Business instance to a dictionary"""
@@ -31,8 +30,7 @@ class Business:
             'reviews_count': self.reviews_count,
             'reviews_average': self.reviews_average,
             'latitude': self.latitude,
-            'longitude': self.longitude,
-            'one_star_reviews': self.one_star_reviews
+            'longitude': self.longitude
         }
 
 class BusinessList:
@@ -60,10 +58,6 @@ class BusinessList:
 
 def extract_coordinates_from_url(url):
     """Helper function to extract coordinates from URL"""
-    # coordinates = url.split('/@')[-1].split('/')[0]
-    # print(coordinates)
-    # lat, lon, h = coordinates.split(',')
-    # return float(lat), float(lon)
     coordinates = url.split('/@')[-1].split('/')[0]
     return float(coordinates.split(',')[0]), float(coordinates.split(',')[1])
 
@@ -148,54 +142,42 @@ def main():
 
                 for listing in listings:
                     try:
-                        html_content = listing.inner_html()
-                        soup = BeautifulSoup(html_content, 'html.parser')
+                        
+                        html_content1 = listing.inner_html()
+                        soup1 = BeautifulSoup(html_content1, 'html.parser')
                         
                         listing.click()
                         page.wait_for_timeout(5000)
-
-                        name_attribute = 'aria-label'
-                        name = soup.select_one('[aria-label]')
-                        address_xpath = '//button[@data-item-id="address"]//div[contains(@class, "fontBodyMedium")]'
-                        website_xpath = '//a[@data-item-id="authority"]//div[contains(@class, "fontBodyMedium")]'
-                        phone_number_xpath = '//button[contains(@data-item-id, "phone:tel:")]//div[contains(@class, "fontBodyMedium")]'
-                        review_count_xpath = '//button[@jsaction="pane.reviewChart.moreReviews"]//span'
-                        reviews_average_xpath = '//div[@jsaction="pane.reviewChart.moreReviews"]//div[@role="img"]'
+                        
+                        # Get HTML content after clicking
+                        html_content = page.content()  # This retrieves the entire HTML of the current page
+                        soup = BeautifulSoup(html_content, 'html.parser')
+                        
+                        name = soup1.select_one('[aria-label]')
+                        address = soup.select_one('[data-item-id="address"] .fontBodyMedium')
+                        website = soup.select_one('[data-item-id="authority"] .fontBodyMedium')
+                        phone_number = soup.select_one('button[data-item-id*="phone:tel:"] div.fontBodyMedium')
+                        review_count = soup.select_one('[jsaction="pane.reviewChart.moreReviews"] span')
+                        reviews_average = soup.select_one('[jsaction="pane.reviewChart.moreReviews"] [role="img"]')
                         
                         business = Business()
 
-                        # if listing.get_attribute(name_attribute):
-                        #     business.name = listing.get_attribute(name_attribute)
-                        # else:
-                        #     business.name = ""
                         business.name = name.get('aria-label') if name else ""
-                        if page.locator(address_xpath).count() > 0:
-                            business.address = page.locator(address_xpath).all()[0].inner_text()
-                        else:
-                            business.address = ""
-                        if page.locator(website_xpath).count() > 0:
-                            business.website = page.locator(website_xpath).all()[0].inner_text()
-                        else:
-                            business.website = ""
-                        if page.locator(phone_number_xpath).count() > 0:
-                            business.phone_number = page.locator(phone_number_xpath).all()[0].inner_text()
-                        else:
-                            business.phone_number = ""
-                        if page.locator(review_count_xpath).count() > 0:
-                            review_text = page.locator(review_count_xpath).inner_text()
+                        business.address = address.get_text() if address else ""
+                        business.website = website.get_text() if website else ""
+                        business.phone_number = phone_number.get_text() if phone_number else ""
+                        if review_count:
+                            review_text = review_count.get_text()
                             business.reviews_count = int(review_text.split()[0].replace(',', '')) or 0
-                            business.one_star_reviews = parse_review_text(review_text)
                         else:
                             business.reviews_count = 0
-                            business.one_star_reviews = 0
                             
-                        if page.locator(reviews_average_xpath).count() > 0:
-                            business.reviews_average = float(page.locator(reviews_average_xpath).get_attribute(name_attribute).split()[0].replace(',', '.')) or 0.0
+                        if reviews_average:
+                            business.reviews_average = float(reviews_average['aria-label'].split()[0].replace(',', '.')) or 0.0
                         else:
                             business.reviews_average = 0.0
                             
                         business.latitude, business.longitude = extract_coordinates_from_url(page.url)
-                        
 
                         business_list.business_list.append(business)
                     except Exception as e:
