@@ -1,4 +1,11 @@
 # Scrape-businesses-in-a-region-on-google-maps-with-python
+
+
+![](data_scraped_csv.png)
+![](data_scraped.png)
+
+
+
 Scrape businesses in a region on google maps with python
 
 To run the provided script, follow these steps:

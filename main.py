@@ -143,9 +143,6 @@ def main():
                 for listing in listings:
                     try:
                         
-                        html_content1 = listing.inner_html()
-                        soup1 = BeautifulSoup(html_content1, 'html.parser')
-                        
                         listing.click()
                         page.wait_for_timeout(5000)
                         
@@ -153,7 +150,7 @@ def main():
                         html_content = page.content()  # This retrieves the entire HTML of the current page
                         soup = BeautifulSoup(html_content, 'html.parser')
                         
-                        name = soup1.select_one('[aria-label]')
+                        name = soup.select_one('.lfPIob')
                         address = soup.select_one('[data-item-id="address"] .fontBodyMedium')
                         website = soup.select_one('[data-item-id="authority"] .fontBodyMedium')
                         phone_number = soup.select_one('button[data-item-id*="phone:tel:"] div.fontBodyMedium')
@@ -162,7 +159,7 @@ def main():
                         
                         business = Business()
 
-                        business.name = name.get('aria-label') if name else ""
+                        business.name = name.get_text() if name else ""
                         business.address = address.get_text() if address else ""
                         business.website = website.get_text() if website else ""
                         business.phone_number = phone_number.get_text() if phone_number else ""

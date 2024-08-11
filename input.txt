@@ -1,4 +1,4 @@
-restaurants
+restaurant
 coffee shops
 gyms
 hotels
